@@ -91,6 +91,37 @@ app.get('/notes', async (req, res) => {
   }
 });
 
+/**
+*
+*/
+app.patch('/notes/:id', async (req, res) => {
+  const { id } = req.params;
+  const body = req.body['body'];
+
+  if (!ObjectId.isValid(id)) return res.status(404).send();
+
+  try {
+    const note = await Note.findOneAndUpdate({
+      _id: id,
+    }, {
+      $set: {
+        body: body,
+      },
+      $push: {
+        edits: new Date().getTime(),
+      },
+    }, {
+      new: true,
+    });
+
+    if (!note) return res.status(404).send('Note not found.');
+
+    return res.send({ note });
+  } catch (err) {
+    return res.status(400).send();
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server started on port ${port}`);
 });
