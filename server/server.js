@@ -116,7 +116,7 @@ app.patch('/notes/:id', async (req, res) => {
 
     if (!note) return res.status(404).send('Note not found.');
 
-    return res.send({ note });
+    return res.send(note);
   } catch (err) {
     return res.status(400).send();
   }
