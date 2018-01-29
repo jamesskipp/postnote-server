@@ -63,13 +63,12 @@ app.post('/users', async (req, res) => {
  *    Code: 400
  *
  */
-app.post('/notes', async (req, res) => {
+app.post('/notes', authenticate, async (req, res) => {
   const note = new Note({
     title: req.body.title,
     body: req.body.body,
     createdAt: new Date().getTime(),
-    // edits: req.body.edits,
-    // _creator: req.user._id,
+    _creator: req.user._id,
   });
 
   try {
@@ -107,13 +106,15 @@ app.post('/notes', async (req, res) => {
  *    Code: 400
  *
  */
-app.get('/notes', async (req, res) => {
+app.get('/notes', authenticate, async (req, res) => {
   try {
-    const notes = await Note.find({});
+    const notes = await Note.find({
+      _creator: req.user._id,
+    });
 
     return res.send({ notes });
-  } catch (err) {
-    return res.send(err);
+  } catch (error) {
+    return res.status(400).send(error);
   }
 });
 
