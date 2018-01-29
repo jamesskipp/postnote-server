@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
-const Note = mongoose.model('Note', {
+const NoteSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-    minLength: 0,
+    minLength: 1,
     trim: true,
   },
   body: {
@@ -26,5 +26,14 @@ const Note = mongoose.model('Note', {
     require: true,
   },
 });
+
+NoteSchema.index({
+  _creator: 1,
+  title: 1,
+}, {
+  unique: true,
+});
+
+const Note = mongoose.model('Note', NoteSchema);
 
 module.exports = { Note };
