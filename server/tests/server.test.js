@@ -3,12 +3,13 @@ const request = require('supertest');
 
 const { app } = require('./../server');
 const { Note } = require('./../models/note');
-const { populateNotes, notes } = require('./seed/seed');
+const { populateNotes, populateUsers, notes, users } = require('./seed/seed');
 
 const mongoose = require('mongoose');
 mongoose.connect('PostNoteTest');
 
 beforeEach(populateNotes);
+beforeEach(populateUsers);
 
 describe('POST /notes', () => {
   it('should save a new note', (done) => {
@@ -60,6 +61,24 @@ describe('PATCH /notes/:id', () => {
         }, (result) => {
           expect(result.body).toBe('New Text');
         });
+      })
+      .end(done);
+  });
+});
+
+describe('POST /users', () => {
+  it('should post a new user', (done) => {
+    const testUser3 = {
+      email: 'TestUser3@email.com',
+      password: 'TestPassword3',
+    };
+
+    request(app)
+      .post('/users')
+      .send(testUser3)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.email).toBe(testUser3.email);
       })
       .end(done);
   });

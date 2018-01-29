@@ -11,10 +11,11 @@ const UserSchema = mongoose.Schema({
     minLength: 5,
     trim: true,
     unique: true,
-    validate: {
+    validate: [{
+      isAsync: false,
       validator: validator.isEmail,
       message: '{VALUE} is not a valid email',
-    }
+    }],
   },
   password: {
     type: String,
@@ -100,11 +101,11 @@ UserSchema.statics.findByCredentials = function usersStaticFindByCredentials(ema
   });
 };
 
-UserSchema.pre('save', function preSave(next) => {
+UserSchema.pre('save', function preSave(next) {
   const user = this;
 
   if (user.isModified('password')) {
-    bcrypt.genSalt(15, (error, salt) => {
+    bcrypt.genSalt(10, (error, salt) => {
       if (error) {
         console.log('Salt Error');
       }

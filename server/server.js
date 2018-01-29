@@ -6,11 +6,37 @@ const { ObjectId } = require('mongodb');
 
 const { mongoose } = require('./db/mongoose');
 const { Note } = require('./models/note');
+const { User } = require('./models/user');
+
+const { authenticate } = require('./middleware/authenticate.js');
 
 const app = express();
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
+
+/**
+ * [user description]
+ * @type {User}
+ */
+app.post('/users', async (req, res) => {
+  const user = new User({
+    email: req.body.email,
+    password: req.body.password,
+  });
+
+  try {
+    await user.save();
+    const token = await user.generateAuthToken();
+
+    return res.header('x-auth', token).send(user);
+  } catch (error) {
+    return res.status(400).send({
+      'type': 'error',
+      'message': error.message,
+    });
+  }
+});
 
 /**
  * Route: POST /notes
