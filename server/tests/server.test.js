@@ -1,27 +1,30 @@
 const expect = require('expect');
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 
 const { app } = require('./../server');
 const { Note } = require('./../models/note');
+const { User } = require('./../models/user');
 const { populateNotes, populateUsers, notes, users } = require('./seed/seed');
-
-const mongoose = require('mongoose');
-mongoose.connect('PostNoteTest');
 
 beforeEach(populateNotes);
 beforeEach(populateUsers);
 
+const testNote = {
+  title: 'Test Title 1',
+  body: 'Test Body 1',
+};
+
+const badToken = jwt.sign({
+  _id: users[0]._id.toHexString(),
+  access: 'auth',
+}, process.env.JWT_SECRET + 1).toString();
+
 describe('POST /notes', () => {
   it('should save a new note', (done) => {
-    const testNote = {
-      title: 'Test Title 1',
-      body: 'Test Body 1',
-      createdAt: new Date().getTime(),
-      edits: [],
-    };
-
     request(app)
       .post('/notes')
+      .set('x-auth', users[0].tokens[0].token)
       .send(testNote)
       .expect(200)
       .expect((res) => {
@@ -30,25 +33,43 @@ describe('POST /notes', () => {
       })
       .end(done);
   });
-});
 
-describe('GET /notes', () => {
-  it('Should get all notes', (done) => {
+  it('shouldn\'t save a note with a bad token', (done) => {
     request(app)
-      .get('/notes')
-      .expect(200)
-      .expect((res) => {
-        expect(res.body.notes[0].title).toBe(notes[0].title);
-        expect(res.body.notes[1].body).toBe(notes[1].body);
-      })
+      .post('/notes')
+      .set('x-auth', badToken)
+      .send(testNote)
+      .expect(401)
       .end(done);
   });
 });
 
-describe('PATCH /notes/:id', () => {
+describe('GET /notes', () => {
+  it('Should get the user\'s notes', (done) => {
+    request(app)
+      .get('/notes')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.notes[0].title).toBe(notes[0].title);
+      })
+      .end(done);
+  });
+
+  it('shouldn\'t get any notes with a bad token', (done) => {
+    request(app)
+      .get('/notes')
+      .set('x-auth', badToken)
+      .expect(401)
+      .end(done);
+  });
+});
+
+describe('PATCH /notes/:title', () => {
   it('should update an existing note', (done) => {
     request(app)
-      .patch('/notes/' + notes[0]._id)
+      .patch('/notes/' + notes[0].title)
+      .set('x-auth', users[0].tokens[0].token)
       .send({
         body: 'New Text',
       })
@@ -62,8 +83,19 @@ describe('PATCH /notes/:id', () => {
           expect(result.body).toBe('New Text');
         });
       })
-      .end(done);
+    .end(done);
   });
+
+  // it('shoudln\'t update any notes with a bad token', (done) => {
+  //   request(app)
+  //     .patch('/notes/' + notes[0].title)
+  //     .set('x-auth', badToken)
+  //     .send({
+  //       body: 'New Text',
+  //     })
+  //     .expect(401)
+  //     .end(done);
+  // });
 });
 
 describe('POST /users', () => {

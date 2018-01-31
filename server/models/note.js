@@ -23,7 +23,7 @@ const NoteSchema = new mongoose.Schema({
   },
   _creator: {
     type: mongoose.Schema.Types.ObjectId,
-    require: true,
+    required: true,
   },
 });
 

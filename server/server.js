@@ -69,6 +69,7 @@ app.post('/notes', authenticate, async (req, res) => {
     body: req.body.body,
     createdAt: new Date().getTime(),
     _creator: req.user._id,
+    edits: [],
   });
 
   try {
@@ -121,15 +122,14 @@ app.get('/notes', authenticate, async (req, res) => {
 /**
 *
 */
-app.patch('/notes/:id', async (req, res) => {
-  const { id } = req.params;
+app.patch('/notes/:title', authenticate, async (req, res) => {
+  const { title } = req.params;
   const body = req.body['body'];
-
-  if (!ObjectId.isValid(id)) return res.status(404).send();
 
   try {
     const note = await Note.findOneAndUpdate({
-      _id: id,
+      title: title,
+      _creator: req.user._id,
     }, {
       $set: {
         body: body,
